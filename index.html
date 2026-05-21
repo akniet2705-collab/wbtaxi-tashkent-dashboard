@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WB Taxi Ташкент — Дашборд</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#0f1117; color:#e2e8f0; min-height:100vh; padding:20px 24px 32px; }
+.header { text-align:center; margin-bottom:20px; }
+h1 { font-size:1.5rem; font-weight:700; color:#fff; letter-spacing:.3px; margin-bottom:5px; }
+.header-brand { font-size:.7rem; color:#7c3aed; text-transform:uppercase; letter-spacing:2px; font-weight:600; margin-bottom:8px; }
+.status-line { display:flex; align-items:center; justify-content:center; gap:8px; font-size:.78rem; color:#64748b; }
+.dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.6); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.filter-bar { max-width:960px; margin:0 auto 18px; background:#161b27; border:1px solid #232b3e; border-radius:10px; padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.filter-bar label { font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; }
+.filter-sep { color:#2d3348; }
+input[type="date"] { background:#0f1117; border:1px solid #2d3348; border-radius:6px; color:#cbd5e1; font-size:.8rem; padding:5px 10px; font-family:inherit; outline:none; }
+input[type="date"]:focus { border-color:#7c3aed; }
+.quick-btns { display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; }
+.qbtn { background:transparent; border:1px solid #2d3348; color:#64748b; font-size:.72rem; font-family:inherit; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all .18s; }
+.qbtn:hover { border-color:#7c3aed; color:#a78bfa; background:rgba(124,58,237,.06); }
+.qbtn.active { border-color:#7c3aed; color:#a78bfa; background:rgba(124,58,237,.1); font-weight:600; }
+
+.last-day-card { max-width:960px; margin:0 auto 16px; background:linear-gradient(135deg,#13172a 0%,#1a1f35 100%); border:1px solid rgba(124,58,237,.25); border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; box-shadow:0 4px 20px rgba(124,58,237,.08); }
+.last-day-left { flex-shrink:0; }
+.last-day-title { font-size:.65rem; color:#7c3aed; text-transform:uppercase; letter-spacing:1.2px; font-weight:600; margin-bottom:3px; }
+.last-day-date { font-size:.95rem; font-weight:700; color:#fff; }
+.last-day-stats { display:flex; gap:24px; flex:1; justify-content:flex-end; flex-wrap:wrap; }
+.lds { text-align:right; }
+.lds .v { font-size:1.1rem; font-weight:700; }
+.lds .l { font-size:.65rem; color:#475569; margin-top:2px; }
+.lds.t .v { color:#a78bfa; }
+.lds.s .v { color:#22d3ee; }
+.lds.a .v { color:#fbbf24; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:960px; margin:0 auto 12px; }
+.kpi-grid.row2 { margin-bottom:18px; }
+.kpi-card { background:#13172a; border:1px solid #1e2540; border-left:3px solid; border-radius:12px; padding:14px 16px; transition:transform .15s, box-shadow .15s; position:relative; overflow:hidden; }
+.kpi-card::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent); }
+.kpi-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.3); }
+.kpi-icon { font-size:1.1rem; margin-bottom:5px; display:block; opacity:.8; }
+.kpi-lbl { font-size:.63rem; color:#475569; text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:6px; }
+.kpi-val { font-size:1.6rem; font-weight:800; line-height:1; margin-bottom:4px; }
+.kpi-sub { font-size:.67rem; color:#374151; }
+.kpi-card.trips  { border-left-color:#7c3aed; } .kpi-card.trips  .kpi-val { color:#a78bfa; }
+.kpi-card.amount { border-left-color:#22d3ee; } .kpi-card.amount .kpi-val { color:#22d3ee; }
+.kpi-card.avg    { border-left-color:#f59e0b; } .kpi-card.avg    .kpi-val { color:#fbbf24; }
+.kpi-card.best   { border-left-color:#a855f7; } .kpi-card.best   .kpi-val { color:#c084fc; }
+.kpi-card.daily  { border-left-color:#06b6d4; } .kpi-card.daily  .kpi-val { color:#38bdf8; }
+.kpi-card.growth { border-left-color:#22c55e; } .kpi-card.growth .kpi-val { color:#4ade80; }
+.kpi-card.growth .kpi-val.neg { color:#f87171; }
+
+.chart-card { background:#13172a; border:1px solid #1e2540; border-radius:14px; padding:20px 24px 16px; max-width:960px; margin:0 auto 16px; box-shadow:0 4px 24px rgba(0,0,0,.2); }
+.chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+.chart-title { font-size:.85rem; font-weight:600; color:#94a3b8; }
+.chart-wrap { position:relative; height:440px; }
+
+.footer { text-align:center; font-size:.68rem; color:#1e2540; max-width:960px; margin:20px auto 0; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #161b27; padding-top:14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">WB Taxi</div>
+  <h1>Активность Ташкент</h1>
+  <div class="status-line">
+    <span class="dot"></span>
+    <span id="lastUpdated">Загрузка...</span>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <label>С</label><input type="date" id="dateFrom">
+  <span class="filter-sep">—</span>
+  <label>ПО</label><input type="date" id="dateTo">
+  <div class="quick-btns">
+    <button class="qbtn" onclick="setRange(7)">7 дней</button>
+    <button class="qbtn active" onclick="setRange(14)">14 дней</button>
+    <button class="qbtn" onclick="setRange(30)">30 дней</button>
+    <button class="qbtn" onclick="setRange(0)">Весь период</button>
+  </div>
+</div>
+
+<div class="last-day-card">
+  <div class="last-day-left">
+    <div class="last-day-title">Последний день с данными</div>
+    <div class="last-day-date" id="ldDate">—</div>
+  </div>
+  <div class="last-day-stats">
+    <div class="lds t"><div class="v" id="ldTrips">—</div><div class="l">завершено</div></div>
+    <div class="lds s"><div class="v" id="ldSum">—</div><div class="l">сўм</div></div>
+    <div class="lds a"><div class="v" id="ldAvg">—</div><div class="l">сред. чек</div></div>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card trips"><span class="kpi-icon">🚖</span><div class="kpi-lbl">Всего поездок</div><div class="kpi-val" id="kpiTrips">—</div><div class="kpi-sub" id="kpiTripsRange">—</div></div>
+  <div class="kpi-card amount"><span class="kpi-icon">💰</span><div class="kpi-lbl">Общая выручка</div><div class="kpi-val" id="kpiAmount">—</div><div class="kpi-sub">сўм за период</div></div>
+  <div class="kpi-card avg"><span class="kpi-icon">📊</span><div class="kpi-lbl">Средняя выручка / день</div><div class="kpi-val" id="kpiAvgDay">—</div><div class="kpi-sub">сўм в среднем за день</div></div>
+</div>
+<div class="kpi-grid row2">
+  <div class="kpi-card best"><span class="kpi-icon">⭐</span><div class="kpi-lbl">Лучший день</div><div class="kpi-val" id="kpiBest">—</div><div class="kpi-sub" id="kpiBestDate">—</div></div>
+  <div class="kpi-card daily"><span class="kpi-icon">📅</span><div class="kpi-lbl">Среднее / день</div><div class="kpi-val" id="kpiDailyAvg">—</div><div class="kpi-sub">поездок в среднем</div></div>
+  <div class="kpi-card growth"><span class="kpi-icon">📈</span><div class="kpi-lbl">Рост за период</div><div class="kpi-val" id="kpiGrowth">—</div><div class="kpi-sub" id="kpiGrowthSub">—</div></div>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header"><span class="chart-title">Ежедневные показатели</span></div>
+  <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+</div>
+
+<div class="footer">
+  <span>WB Taxi Ташкент — EATSEXPRESS</span>
+  <span id="footerUpdated">Данные: partners.taxi.wildberries.uz</span>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+const fmt = n => n>=1e9?(n/1e9).toFixed(2)+' млрд':n>=1e6?(n/1e6).toFixed(2)+' млн':n.toLocaleString('ru');
+const fmtN = n => n.toLocaleString('ru');
+const fmtDate = s => { const [y,m,d]=s.split('-'); return `${d}.${m}.${y}`; };
+
+let RAW = [], mainChart = null;
+
+function getFiltered() {
+  const from=document.getElementById('dateFrom').value, to=document.getElementById('dateTo').value;
+  return RAW.filter(r=>r.date>=from&&r.date<=to);
+}
+
+function setRange(days) {
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const LAST=RAW[RAW.length-1].date, FIRST=RAW[0].date;
+  let fromStr;
+  if(days===0){fromStr=FIRST;}
+  else{const f=new Date(LAST);f.setDate(f.getDate()-days+1);fromStr=f.toISOString().slice(0,10);if(fromStr<FIRST)fromStr=FIRST;}
+  document.getElementById('dateFrom').value=fromStr;
+  document.getElementById('dateTo').value=LAST;
+  render();
+}
+
+function render() {
+  const data=getFiltered(); if(!data.length)return;
+  const totalCompleted=data.reduce((s,r)=>s+r.completed,0);
+  const totalSum=data.reduce((s,r)=>s+r.sum,0);
+  const days=data.length, avgDaySum=totalSum/days, avgDayTrips=totalCompleted/days;
+  const bestRow=data.reduce((a,b)=>b.completed>a.completed?b:a);
+  const half=Math.floor(days/2);
+  const avgFirst=data.slice(0,half).reduce((s,r)=>s+r.completed,0)/(half||1);
+  const avgSecond=data.slice(days-half).reduce((s,r)=>s+r.completed,0)/(half||1);
+  const growth=((avgSecond-avgFirst)/(avgFirst||1)*100).toFixed(1);
+  const growthPos=parseFloat(growth)>=0;
+  const ld=data[data.length-1];
+  document.getElementById('ldDate').textContent=fmtDate(ld.date);
+  document.getElementById('ldTrips').textContent=fmtN(ld.completed);
+  document.getElementById('ldSum').textContent=fmt(ld.sum);
+  document.getElementById('ldAvg').textContent=fmtN(Math.round(ld.sum/ld.completed));
+  document.getElementById('kpiTrips').textContent=fmtN(totalCompleted);
+  document.getElementById('kpiTripsRange').textContent=`${fmtDate(data[0].date)} — ${fmtDate(ld.date)}`;
+  document.getElementById('kpiAmount').textContent=fmt(totalSum);
+  document.getElementById('kpiAvgDay').textContent=fmt(Math.round(avgDaySum));
+  document.getElementById('kpiBest').textContent=fmtN(bestRow.completed);
+  document.getElementById('kpiBestDate').textContent=fmtDate(bestRow.date);
+  document.getElementById('kpiDailyAvg').textContent=fmtN(Math.round(avgDayTrips));
+  const growthEl=document.getElementById('kpiGrowth');
+  growthEl.textContent=`${growthPos?'▲':'▼'} ${growthPos?'+':''}${growth}%`;
+  growthEl.className='kpi-val'+(growthPos?'':' neg');
+  document.getElementById('kpiGrowthSub').textContent=`${fmtN(Math.round(avgSecond))} vs ${fmtN(Math.round(avgFirst))} / день`;
+
+  const labels=data.map(r=>r.date.slice(5).replace('-','.'));
+  const trips=data.map(r=>r.completed);
+  const sumsMln=data.map(r=>+(r.sum/1e6).toFixed(0));
+  const sumAxisMax=Math.ceil(Math.max(...sumsMln)*1.5/100)*100;
+
+  if(mainChart)mainChart.destroy();
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  const gradient=ctx.createLinearGradient(0,0,0,380);
+  gradient.addColorStop(0,'rgba(34,197,94,.18)');
+  gradient.addColorStop(1,'rgba(34,197,94,0)');
+  mainChart=new Chart(ctx,{
+    data:{labels,datasets:[
+      {type:'bar',label:'Поездки',data:trips,backgroundColor:'rgba(100,116,195,.55)',borderColor:'rgba(129,140,248,.8)',borderWidth:1,borderRadius:4,borderSkipped:false,yAxisID:'yTrips',
+       datalabels:{display:true,anchor:'end',align:'end',color:'#e2e8f0',font:{size:9,weight:'700'},formatter:v=>fmtN(v)}},
+      {type:'line',label:'Выручка (млн сўм)',data:sumsMln,borderColor:'#22c55e',backgroundColor:gradient,
+       pointBackgroundColor:'#22c55e',pointBorderColor:'#0f1117',pointBorderWidth:1.5,pointRadius:4,pointHoverRadius:6,
+       borderWidth:2.5,tension:.35,fill:true,yAxisID:'ySum',
+       datalabels:{display:true,anchor:'top',align:'top',color:'#22c55e',font:{size:8,weight:'600'},formatter:v=>v+'м'}}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#94a3b8',font:{size:11},boxWidth:12,padding:16,usePointStyle:true,pointStyle:'circle'}},
+        tooltip:{backgroundColor:'rgba(19,23,42,.95)',borderColor:'#1e2540',borderWidth:1,padding:10,titleColor:'#94a3b8',bodyColor:'#e2e8f0',
+          callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return`  Поездки: ${fmtN(ctx.parsed.y)}`;if(ctx.datasetIndex===1)return`  Выручка: ${ctx.parsed.y} млн сўм`;}}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#475569',font:{size:10}},border:{color:'rgba(255,255,255,.04)'}},
+        yTrips:{position:'left',min:0,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#818cf8',font:{size:10},callback:v=>fmtN(v)},border:{color:'transparent'}},
+        ySum:{position:'right',min:0,max:sumAxisMax,grid:{display:false},ticks:{color:'#22c55e',font:{size:10},callback:v=>v+'м'},border:{color:'transparent'}}
+      }}
+  });
+}
+
+document.getElementById('dateFrom').addEventListener('change',render);
+document.getElementById('dateTo').addEventListener('change',render);
+
+// Load data.json
+fetch('data.json?t='+Date.now())
+  .then(r=>r.json())
+  .then(data=>{
+    RAW=data;
+    const LAST=RAW[RAW.length-1].date, FIRST=RAW[0].date;
+    document.getElementById('dateFrom').value=FIRST;
+    document.getElementById('dateTo').value=LAST;
+    document.getElementById('lastUpdated').textContent=`Данные: ${fmtDate(FIRST)} — ${fmtDate(LAST)}`;
+    document.getElementById('footerUpdated').textContent=`Обновлено: ${fmtDate(LAST)} · partners.taxi.wildberries.uz`;
+    // default: last 14 days
+    const f=new Date(LAST);f.setDate(f.getDate()-13);
+    const from14=f.toISOString().slice(0,10);
+    document.getElementById('dateFrom').value=from14<FIRST?FIRST:from14;
+    render();
+  })
+  .catch(e=>document.getElementById('lastUpdated').textContent='Ошибка загрузки данных: '+e);
+</script>
+</body>
+</html>
