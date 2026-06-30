@@ -307,44 +307,44 @@
   },
   {
     "date": "2026-06-22",
-    "completed": "19544.00",
-    "sum": "484641586.00",
-    "commission": "37279195.00"
+    "completed": 19544,
+    "sum": 484641586,
+    "commission": 37279195
   },
   {
     "date": "2026-06-23",
-    "completed": "20533.00",
-    "sum": "527296266.00",
-    "commission": "42356585.00"
+    "completed": 20533,
+    "sum": 527296266,
+    "commission": 42356585
   },
   {
     "date": "2026-06-25",
-    "completed": "14097.00",
-    "sum": "358900815.00",
-    "commission": "28684385.00"
+    "completed": 14097,
+    "sum": 358900815,
+    "commission": 28684385
   },
   {
     "date": "2026-06-26",
-    "completed": "19328.00",
-    "sum": "488178796.00",
-    "commission": "35863440.00"
+    "completed": 19328,
+    "sum": 488178796,
+    "commission": 35863440
   },
   {
     "date": "2026-06-27",
-    "completed": "18382.00",
-    "sum": "426345070.00",
-    "commission": "35093095.00"
+    "completed": 18382,
+    "sum": 426345070,
+    "commission": 35093095
   },
   {
     "date": "2026-06-28",
-    "completed": "14603.00",
-    "sum": "337219608.00",
-    "commission": "31739669.00"
+    "completed": 14603,
+    "sum": 337219608,
+    "commission": 31739669
   },
   {
     "date": "2026-06-29",
-    "completed": "18877.00",
-    "sum": "435801011.00",
-    "commission": "35283768.00"
+    "completed": 18877,
+    "sum": 435801011,
+    "commission": 35283768
   }
 ]
