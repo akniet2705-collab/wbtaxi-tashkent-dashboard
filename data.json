@@ -706,5 +706,11 @@
     "completed": 14404,
     "sum": 338970300,
     "commission": 18142068
+  },
+  {
+    "date": "2026-09-01",
+    "completed": 13603,
+    "sum": 335529400,
+    "commission": 18017203
   }
 ]
